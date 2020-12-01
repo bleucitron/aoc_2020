@@ -1,7 +1,7 @@
 mod utils;
 
 fn main() {
-  println!("Hello, world!");
+  println!("Day 01 !");
   let file_name = "./data/01.txt";
 
   let numbers = utils::read_input(file_name);
