@@ -1,32 +1,44 @@
 mod utils;
 
 fn main() {
-  println!("Day 01 !");
-  let file_name = "./data/01.txt";
+  println!("Day 02 !");
+  let file_name = "./data/02.txt";
 
-  let numbers = utils::read_input(file_name);
+  let pwds = utils::read_input(file_name);
 
-  for i in 0..numbers.len() {
-    let first = numbers[i];
+  let mut valid = 0;
 
-    for j in i + 1..numbers.len() {
-      let second = numbers[j];
+  for i in 0..pwds.len() {
+    let pwd = &pwds[i];
+    let v: Vec<&str> = pwd.split(':').collect();
 
-      for k in j + 1..numbers.len() {
-        let third = numbers[k];
+    let rule: Vec<&str> = v[0].split(' ').collect();
+    let pwd = v[1].trim();
 
-        if first + second + third == 2020 {
-          println!("{0} + {1} + {2} = 2020", first, second, third);
-          println!(
-            "{0} * {1} * {2} = {3}",
-            first,
-            second,
-            third,
-            first * second * third
-          );
-          break;
-        }
-      }
+    let numbers: Vec<&str> = rule[0].split('-').collect();
+    let letter = rule[1];
+
+    // PART 1
+    // let min: usize = numbers[0].parse().unwrap();
+    // let max: usize = numbers[1].parse().unwrap();
+    // let count = pwd.matches(letter).count();
+    // if (count >= min) && (count <= max) {
+    //   valid += 1;
+    // }
+
+    // PART 2
+    let index1: usize = numbers[0].parse().unwrap();
+    let index2: usize = numbers[1].parse().unwrap();
+
+    let letter1 = pwd.chars().nth(index1 - 1).unwrap().to_string();
+    let letter2 = pwd.chars().nth(index2 - 1).unwrap().to_string();
+
+    if (letter1 == letter) && (letter2 != letter) {
+      valid += 1;
+    } else if (letter1 != letter) && (letter2 == letter) {
+      valid += 1;
     }
   }
+
+  println!("VALID {}", valid);
 }
