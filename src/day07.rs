@@ -7,6 +7,8 @@ fn remove_bag(s: &str) -> String {
 }
 
 pub fn run() {
+  println!("Day 07 !");
+
   let file_name = "./data/07.txt";
   let data = utils::read_input(file_name);
 
