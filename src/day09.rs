@@ -33,7 +33,7 @@ pub fn run() {
     }
   }
 
-  println!("NOT VALID {}", data[index]);
+  println!("   1) {}", data[index]);
 
   for j in 0..index {
     let nb_j = data[j];
@@ -57,7 +57,7 @@ pub fn run() {
       let min = suite.iter().min().unwrap();
       let max = suite.iter().max().unwrap();
 
-      println!("RESULT {} ({} + {})", min + max, min, max);
+      println!("   2) {}", min + max);
       break;
     }
   }
