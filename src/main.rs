@@ -1,11 +1,6 @@
-// #[path = "./day11.rs"]
-// mod day11;
-mod utils;
+#[path = "./day11.rs"]
+mod day11;
 
 fn main() {
-  let file_name = "./data/test.txt";
-  let data = utils::read_input_as_nb(file_name);
-  // day11::run();
-
-  println!("DATA {:?}", data);
+  day11::run()
 }
