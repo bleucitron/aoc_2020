@@ -14,7 +14,6 @@ pub fn run() {
   let file_name = "./data/11.txt";
   let data = utils::read_input(file_name);
   let len = data.len();
-  // day11::run();
 
   let mut nb_occupied = 0;
   let mut nb_iter = 0;
