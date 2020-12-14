@@ -59,11 +59,8 @@ fn part1(d: Vec<String>) {
 
     let r = Regex::new(r"mem\[(\d*)\]").unwrap();
 
-    println!("LINE {}", line[1]);
     let input = line[1].parse::<usize>().unwrap();
     let mut pos = 0;
-
-    println!("INPUT {}", input);
 
     for cap in r.captures_iter(line[0]) {
       pos = cap[1].parse::<i64>().unwrap();
@@ -71,7 +68,6 @@ fn part1(d: Vec<String>) {
 
     let m: Vec<char> = mask.clone().chars().collect();
     let binary = format!("{:0>36}", to_binary(input));
-    println!("{}", binary);
 
     let mut new_chars: Vec<char> = binary.chars().collect();
 
@@ -84,8 +80,6 @@ fn part1(d: Vec<String>) {
     let output = to_decimal(&output_string);
 
     memory.insert(pos, output);
-
-    println!("Memory insert {} {}", pos, output);
   }
 
   let mut result = 0;
@@ -101,8 +95,6 @@ fn part2(d: Vec<String>) {
 
   let mut memory = HashMap::new();
 
-  println!("{}", mask);
-
   for i in 0..d.len() {
     let line: Vec<&str> = d[i].split(" = ").collect();
 
@@ -113,11 +105,8 @@ fn part2(d: Vec<String>) {
 
     let r = Regex::new(r"mem\[(\d*)\]").unwrap();
 
-    println!("LINE {}", line[1]);
     let input = line[1].parse::<usize>().unwrap();
     let mut pos = 0;
-
-    println!("INPUT {}", input);
 
     for cap in r.captures_iter(line[0]) {
       pos = cap[1].parse::<usize>().unwrap();
@@ -125,7 +114,6 @@ fn part2(d: Vec<String>) {
 
     let m: Vec<char> = mask.clone().chars().collect();
     let binary = format!("{:0>36}", to_binary(pos));
-    println!("BINARY {}", binary);
 
     let mut new_chars: Vec<char> = binary.chars().collect();
 
@@ -138,15 +126,11 @@ fn part2(d: Vec<String>) {
     }
     let output_string: String = new_chars.into_iter().collect();
 
-    // let mut to_check: Vec<Vec<char>> = Vec::new();
-    // to_check.push(new_chars);
-
     let mems = check_string(output_string);
 
     for i in 0..mems.len() {
       let s = mems[i].to_string();
       let pos = to_decimal(&s);
-      // println!("POS {}", pos);
 
       memory.insert(pos, input);
     }
@@ -161,10 +145,10 @@ fn part2(d: Vec<String>) {
 }
 
 pub fn run() {
-  let file_name = "./data/test.txt";
+  let file_name = "./data/14.txt";
   let data = utils::read_input(file_name);
   let data2 = data.clone();
 
-  // part1(data);
+  part1(data);
   part2(data2);
 }
