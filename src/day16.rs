@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use std::iter::FromIterator;
 mod utils;
 
-fn part1(tickets: Vec<String>, rules: Vec<String>) {
+fn part1(tickets: Vec<String>, rules: &HashMap<usize, impl Fn(&i32) -> bool>) {
   let nbs = nb_from_tickets(tickets);
   let mut to_remove: Vec<i32> = Vec::new();
 
@@ -13,10 +13,7 @@ fn part1(tickets: Vec<String>, rules: Vec<String>) {
 
     let mut is_valid = false;
 
-    for j in 0..rules.len() {
-      let rule = &rules[j];
-      let check = get_rule(&rule);
-
+    for check in rules.values() {
       is_valid = check(&nb);
 
       if is_valid {
@@ -32,7 +29,11 @@ fn part1(tickets: Vec<String>, rules: Vec<String>) {
   println!("   Part 1: {}", sum(to_remove));
 }
 
-fn part2(tickets: Vec<String>, rules: Vec<String>, my_ticket_values: Vec<usize>) {
+fn part2(
+  tickets: Vec<String>,
+  rules: &HashMap<usize, impl Fn(&i32) -> bool>,
+  my_ticket_values: Vec<usize>,
+) {
   let mut valid_tickets: Vec<Vec<i32>> = Vec::new();
 
   println!("STEP 1: valid tickets");
@@ -47,12 +48,15 @@ fn part2(tickets: Vec<String>, rules: Vec<String>, my_ticket_values: Vec<usize>)
       let nb = &nbs[j];
       let mut is_valid = false;
 
-      for k in 0..rules.len() {
-        let rule = &rules[k];
-        let check = get_rule(&rule);
-
+      for check in rules.values() {
         is_valid = is_valid || check(&nb);
       }
+      // for k in 0..rules.len() {
+      //   let rule = &rules[k];
+      //   let check = get_rule(&rule);
+
+      //   is_valid = is_valid || check(&nb);
+      // }
 
       is_ticket_valid = is_ticket_valid && is_valid;
       if !is_ticket_valid {
@@ -91,10 +95,7 @@ fn part2(tickets: Vec<String>, rules: Vec<String>, my_ticket_values: Vec<usize>)
 
       let nb = &ticket[position];
 
-      for k in 0..rules.len() {
-        let rule = &rules[k];
-        let check = get_rule(&rule);
-
+      for (k, check) in rules.iter() {
         if !check(nb) {
           possible_rules.remove(&k);
         }
@@ -249,6 +250,15 @@ pub fn run() {
     .map(|x| x.trim().parse::<usize>().unwrap())
     .collect();
 
-  part1(tickets.clone(), rules.clone());
-  part2(tickets.clone(), rules.clone(), my_values.clone());
+  let mut rule_map: HashMap<usize, _> = HashMap::new();
+
+  for j in 0..rules.len() {
+    let rule = &rules[j];
+    let check = get_rule(&rule);
+
+    rule_map.insert(j, check);
+  }
+
+  part1(tickets.clone(), &rule_map);
+  part2(tickets.clone(), &rule_map, my_values.clone());
 }
