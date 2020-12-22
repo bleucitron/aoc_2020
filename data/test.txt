@@ -1,4 +1,8 @@
-mxmxvkd kfcds sqjhc nhms (contains dairy, fish)
-trh fvjkl sbzzf mxmxvkd (contains dairy)
-sqjhc fvjkl (contains soy)
-sqjhc mxmxvkd sbzzf (contains fish)
+Player 1:
+43
+19
+
+Player 2:
+2
+29
+14
