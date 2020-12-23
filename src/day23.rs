@@ -2,73 +2,64 @@ mod utils;
 
 fn move_around(input: Vec<i32>, nb: usize) -> Vec<i32> {
   let mut cups = input.clone();
-  let len = cups.len();
+  let mut cache = input.clone();
+  let len = input.len();
 
   for i in 0..nb {
-    if i > 0 && i % 1_0 == 0 {
+    if i > 0 && i % 1_000_00 == 0 {
       println!("MOVE nb {}", i);
     }
     let pos = if i >= cups.len() { i % cups.len() } else { i };
     let current = cups[pos];
 
-    // println!("");
-    // println!("CUrrent {}", current);
+    let r1 = cups[(pos + 1) % len];
+    let r2 = cups[(pos + 2) % len];
+    let r3 = cups[(pos + 3) % len];
+    let mut to_replace = [r1, r2, r3].to_vec();
+    let max = *cups.iter().max().unwrap() as i32;
 
-    let mut doubled = cups.clone();
-    doubled.extend(doubled.clone());
-    // println!("Doubled {:?}", doubled);
-
-    let start = cups[0..pos].to_vec();
-    let start_len = start.len();
-    let mut changed = cups[pos..(pos + 1)].to_vec();
-    let end = doubled[((len + pos + 4) % (2 * len))..(2 * len)].to_vec();
-
-    let removed = doubled[(pos + 1)..(pos + 4)].to_vec();
-
-    changed.extend(end);
-    changed.extend(start);
-
-    // println!("Changed {:?}", changed);
-    // println!("Removed {:?}", removed);
-
-    let mut destination_value = current;
-
+    let mut destination = current;
     loop {
-      destination_value = destination_value - 1;
+      destination = destination - 1;
 
-      if destination_value == 0 {
-        destination_value = *changed.iter().max().unwrap() as i32;
+      if destination == 0 {
+        destination = *cups.iter().max().unwrap() as i32;
       }
 
-      if !removed.iter().any(|&c| c == destination_value) {
+      if destination != r1 && destination != r2 && destination != r3 {
         break;
       }
     }
-
-    // println!("  DESTINATION {}", destination_value);
-    let destination = changed
-      .iter()
-      .position(|&c| c == destination_value)
-      .unwrap()
-      + 1;
+    // let destination = cups.iter().position(|&c| c == destination_value).unwrap() + 1;
     // println!("  DESTINATION index {}", destination);
 
-    let mut split = changed[0..destination].to_vec();
-    let split_2 = changed[destination..changed.len()].to_vec();
+    // cups[pos +1] =
 
-    split.extend(removed);
-    split.extend(split_2);
+    let mut replace = false;
+    for j in 0..len {
+      if replace {
+        if to_replace.len() == 0 {
+          replace = false;
+          break;
+        } else {
+          let r = to_replace.remove(0);
+          let o = std::mem::replace(&mut cups[j], r);
+        }
+      } else if j > pos {
+        let new_pos = (j + pos + 3) % len;
+        cups[j] = cups[new_pos];
+        if cups[j] == destination {
+          replace = true;
+        }
+      }
 
-    // println!("SPLIT {:?}", split);
-    let split_3 = split[0..(len - start_len)].to_vec();
-    let mut final_cups = split[(len - start_len)..len].to_vec();
-    final_cups.extend(split_3);
-
-    cups = final_cups;
-
-    // println!("NEW {:?}", cups);
+      // println!("    {:?}", cups);
+      // break;
+    }
+    // println!("");
+    println!("NEW {:?}", cups);
+    // break;
   }
-
   return cups;
 }
 
@@ -84,7 +75,7 @@ pub fn run() {
     .map(|x| x.to_string().parse::<i32>().unwrap())
     .collect();
 
-  println!("CUPS {:?}", cups);
+  println!("CUPS{:?}", cups);
 
   let mut final_cups = move_around(cups.clone(), 100);
   while final_cups[0] != 1 {
@@ -102,7 +93,7 @@ pub fn run() {
   }
   println!("   Part 1: {}", output);
 
-  // return;
+  return;
 
   let mut cups_p2 = cups.clone();
 
