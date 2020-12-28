@@ -28,8 +28,6 @@ fn get_loop_size(nb: i64) -> i64 {
     loop_size += 1;
     result = step(result, 7);
 
-    // println!("RESULT {} NB {}", result, nb);
-
     if result == nb {
       break;
     }

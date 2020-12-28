@@ -2,10 +2,17 @@ use regex::Regex;
 use std::collections::HashMap;
 mod utils;
 
-fn get_rule_map(s: String) -> HashMap<i32, String> {
+#[derive(Clone, Debug)]
+pub enum Rule {
+  Literal(char),
+  Seq(Vec<i32>),
+  Or(Vec<i32>, Vec<i32>),
+}
+
+fn get_rule_map(s: String) -> HashMap<i32, Rule> {
   let rules: Vec<&str> = s.split('\n').collect();
 
-  let mut map: HashMap<i32, String> = HashMap::new();
+  let mut map: HashMap<i32, Rule> = HashMap::new();
 
   let re = Regex::new(r"(\d*): (.*)").unwrap();
   for i in 0..rules.len() {
@@ -14,151 +21,129 @@ fn get_rule_map(s: String) -> HashMap<i32, String> {
       let pos = cap[1].parse::<i32>().unwrap();
       let rule = cap[2].to_string();
 
-      // PART 1
-      // map.insert(pos, rule);
-      // PART 2
-      if pos == 8 {
-        map.insert(pos, "42 | 42 8".to_string());
-      } else if pos == 11 {
-        map.insert(pos, "42 31 | 42 11 31".to_string());
+      if rule.chars().nth(0).unwrap() == '"' {
+        let c = rule.chars().nth(1).unwrap();
+        map.insert(pos, Rule::Literal(c));
+      } else if rule.contains('|') {
+        let strings: Vec<&str> = rule.split(" | ").collect();
+
+        let left = split(strings[0]);
+        let right = split(strings[1]);
+
+        map.insert(pos, Rule::Or(left, right));
       } else {
-        map.insert(pos, rule);
+        let seq = split(&rule);
+
+        map.insert(pos, Rule::Seq(seq));
       }
     }
   }
-  // println!("MAP {:?}", map);
 
   return map;
 }
 
 fn split(s: &str) -> Vec<i32> {
-  // println!("S {}", s);
   return s.split(' ').map(|s| s.parse::<i32>().unwrap()).collect();
 }
 
-fn read_rule(s: &String, rule_string: &String, map: HashMap<i32, String>) -> (bool, String) {
-  if s.len() == 0 {
-    println!("    XXXX");
-    return (false, "".to_string());
+fn validate(s: String, mut next: Vec<Rule>, map: HashMap<i32, Rule>) -> bool {
+  if next.len() == 0 {
+    return s == "";
   }
 
-  if rule_string.chars().nth(0).unwrap() == '"' {
-    // println!("String {} Rule {}", s, rule_string);
-    let pos = 0;
+  if s.len() == 0 {
+    return false;
+  }
 
-    let current_char = s.chars().nth(pos).unwrap();
-    let valid_char = rule_string.chars().nth(1).unwrap();
+  match next.pop() {
+    Some(Rule::Literal(c)) => {
+      let mut s_copy = s.clone();
+      let first = s_copy.remove(0);
 
-    let mut next = s.clone();
-
-    let is_valid = current_char == valid_char;
-    next.remove(pos);
-
-    return (is_valid, next);
-  } else if rule_string.contains('|') {
-    let strings: Vec<&str> = rule_string.split(" | ").collect();
-
-    let rule1 = strings[0];
-    let rule2 = strings[1];
-
-    let (is_valid_1, n1) = read_rule(s, &rule1.to_string(), map.clone());
-
-    if is_valid_1 {
-      return (true, n1);
-    } else {
-      // println!("LEFT SIDE {} {}", rule1, false);
-      let (is_valid_2, n2) = read_rule(s, &rule2.to_string(), map.clone());
-      // println!("RIGHT SIDE {} {}", rule2, false);
-      return (is_valid_2, n2);
+      return first == c && validate(s_copy, next, map);
     }
-  } else {
-    let rules: Vec<i32> = split(rule_string);
+    Some(Rule::Seq(seq)) => {
+      let n = seq.len();
+      for i in 0..n {
+        let rule = map.get(&seq[n - 1 - i]).unwrap().clone();
 
-    // println!("COMBINED RULE {:?} {}", rules, rule_string);
-
-    let mut is_valid = true;
-    let mut next = s.clone();
-
-    let mut vec: Vec<bool> = Vec::new();
-
-    // if rule_string == "42 11 31" {
-    if false {
-      // TENTATIVE DE CHANGEMENT D'ORDRE, mais même en essayant d'inverser les caractères, ca ne change rien
-      println!("BOUYA {}", s);
-
-      let (valid_42, n_42) = read_rule(&next, map.get(&42).unwrap(), map.clone());
-      println!("next 42 {}", n_42);
-
-      is_valid = is_valid && valid_42;
-
-      vec.push(valid_42);
-      next = n_42.chars().rev().collect::<String>();
-
-      let (valid_31, n_31) = read_rule(&next, map.get(&31).unwrap(), map.clone());
-
-      is_valid = is_valid && valid_31;
-
-      vec.push(valid_31);
-
-      next = n_31;
-      println!("after 31 {}", next);
-
-      let (valid_11, n_11) = read_rule(&next, map.get(&11).unwrap(), map.clone());
-      is_valid = is_valid && valid_11;
-      vec.push(valid_11);
-      next = n_11;
-    } else {
-      for i in 0..rules.len() {
-        let rule = rules[i];
-
-        let (_is_valid, n) = read_rule(&next, map.get(&rule).unwrap(), map.clone());
-        is_valid = is_valid && _is_valid;
-
-        next = n;
-        vec.push(is_valid);
+        next.push(rule);
       }
-    }
 
-    // if !is_valid {
-    //   println!("S {} {:?} {}", rule_string, v, s);
-    //   println!("COMBO {} {}", is_valid, _next);
-    // }
-    // if rule_string == "42 11 31" {
-    println!("RULES {:?}", rules);
-    println!("VALIDS {:?}", vec);
-    // }
-    return (is_valid, next);
+      return validate(s.clone(), next, map);
+    }
+    Some(Rule::Or(seq1, seq2)) => {
+      let l1 = seq1.len();
+      let mut n1 = next.clone();
+
+      for i in 0..l1 {
+        let rule = map.get(&seq1[l1 - 1 - i]).unwrap().clone();
+
+        n1.push(rule);
+      }
+
+      let l2 = seq2.len();
+      let mut n2 = next.clone();
+
+      for i in 0..l2 {
+        let rule = map.get(&seq2[l2 - 1 - i]).unwrap().clone();
+
+        n2.push(rule);
+      }
+
+      return validate(s.clone(), n1, map.clone()) || validate(s.clone(), n2, map.clone());
+    }
+    None => {
+      return true;
+    }
   }
 }
 
-fn check(s: String, map: HashMap<i32, String>) -> bool {
-  let (is_valid, _next) = read_rule(&s, &map.get(&0).unwrap(), map.clone());
+fn check(s: String, map: HashMap<i32, Rule>) -> bool {
+  let mut rules: Vec<Rule> = Vec::new();
 
-  println!("IS VALID {} {}", s, is_valid);
+  rules.push(map.get(&0).unwrap().clone());
+
+  let is_valid = validate(s.clone(), rules, map);
+
+  // println!("IS VALID {} {}", s, is_valid);
   return is_valid;
 }
 
 pub fn run() {
   println!("Day 19 !");
-  let file_name = "./data/test.txt";
+  let file_name = "./data/19.txt";
 
   let input = utils::read_input_with_empty_lines(file_name);
 
   let lines: Vec<&str> = input[1].trim().split('\n').collect();
 
-  let map = get_rule_map(input[0].clone());
+  let mut map = get_rule_map(input[0].clone());
 
-  check(lines[2].to_string(), map.clone());
+  map.insert(
+    8,
+    Rule::Or(
+      [42].iter().copied().collect(),
+      [42, 8].iter().copied().collect(),
+    ),
+  );
+  map.insert(
+    11,
+    Rule::Or(
+      [42, 31].iter().copied().collect(),
+      [42, 11, 31].iter().copied().collect(),
+    ),
+  );
 
-  // let mut nb = 0;
-  // for i in 0..lines.len() {
-  //   let line = lines[i];
+  let mut nb = 0;
+  for i in 0..lines.len() {
+    let line = lines[i];
 
-  //   let is_valid = check(line.to_string(), map.clone());
+    let is_valid = check(line.to_string(), map.clone());
 
-  //   if is_valid {
-  //     nb += 1;
-  //   }
-  // }
-  // println!("   Part 1: {}", nb)
+    if is_valid {
+      nb += 1;
+    }
+  }
+  println!("   Part 2: {}", nb)
 }
