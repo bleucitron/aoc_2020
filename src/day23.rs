@@ -1,71 +1,71 @@
+use std::collections::HashMap;
 mod utils;
 
 fn move_around(input: Vec<i32>, nb: usize) -> Vec<i32> {
   let mut cups = input.clone();
-  let mut cache = input.clone();
-  let len = input.len();
 
   for i in 0..nb {
-    if i > 0 && i % 1_000_00 == 0 {
+    if i % 1_000_000 == 0 {
       println!("MOVE nb {}", i);
     }
     let pos = if i >= cups.len() { i % cups.len() } else { i };
     let current = cups[pos];
 
-    let r1 = cups[(pos + 1) % len];
-    let r2 = cups[(pos + 2) % len];
-    let r3 = cups[(pos + 3) % len];
-    let mut to_replace = [r1, r2, r3].to_vec();
-    let max = *cups.iter().max().unwrap() as i32;
+    // let removed = &cups[1..4];
+    // // PREND BCP TROP DE TEMPS
+    let mut removed: Vec<i32> = Vec::new();
+    let mut k = 1;
+    while k < 4 {
+      let mut to_remove = pos + 1;
 
-    let mut destination = current;
-    loop {
-      destination = destination - 1;
-
-      if destination == 0 {
-        destination = *cups.iter().max().unwrap() as i32;
+      if to_remove >= cups.len() {
+        to_remove = 0;
       }
 
-      if destination != r1 && destination != r2 && destination != r3 {
-        break;
-      }
+      let value = cups.remove(to_remove);
+      removed.push(value);
+
+      k += 1;
     }
-    // let destination = cups.iter().position(|&c| c == destination_value).unwrap() + 1;
-    // println!("  DESTINATION index {}", destination);
 
-    // cups[pos +1] =
+    // OK
+    let mut destination_value = current - 1;
 
-    let mut replace = false;
-    for j in 0..len {
-      if replace {
-        if to_replace.len() == 0 {
-          replace = false;
-          break;
-        } else {
-          let r = to_replace.remove(0);
-          let o = std::mem::replace(&mut cups[j], r);
-        }
-      } else if j > pos {
-        let new_pos = (j + pos + 3) % len;
-        cups[j] = cups[new_pos];
-        if cups[j] == destination {
-          replace = true;
-        }
-      }
-
-      // println!("    {:?}", cups);
-      // break;
+    while removed.iter().any(|&c| c == destination_value) {
+      destination_value = destination_value - 1;
     }
-    // println!("");
-    println!("NEW {:?}", cups);
-    // break;
+    if destination_value == 0 {
+      destination_value = *cups.iter().max().unwrap() as i32;
+    }
+
+    // PREND BEAUCOUP TROP DE TEMPS
+    let destination = cups.iter().position(|&c| c == destination_value).unwrap() + 1;
+    // let destination = 1000000;
+
+    // TIMING A VERIFIER
+    for j in 0..removed.len() {
+      let mut new_pos = destination + j;
+
+      if new_pos > cups.len() {
+        new_pos = new_pos % cups.len();
+      }
+      cups.insert(new_pos, removed[j]);
+    }
+
+    while cups[pos] != current {
+      let moved = cups.remove(0);
+      cups.push(moved);
+    }
+
+    // println!("NEW {:?}", new_cups);
   }
+
   return cups;
 }
 
 pub fn run() {
   println!("Day 23 !");
-  let file_name = "./data/test.txt";
+  let file_name = "./data/23.txt";
 
   let input = utils::read_input(file_name);
 
@@ -84,8 +84,6 @@ pub fn run() {
   }
 
   final_cups.remove(0);
-
-  // println!("Final CUPS {:?}", final_cups);
 
   let mut output = "".to_string();
   for i in 0..final_cups.len() {
